@@ -19,6 +19,6 @@ export {
     WFMModule,
     WFMComponent,
     bootstrap,
-    wfm,
+    _,
     router
 }
