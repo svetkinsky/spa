@@ -1,47 +1,42 @@
 import {
-    router
-} from "../tools/router"
-import {
     _
-} from "../tools/util"
+} from '../tools/util'
+import {
+    initComponents
+} from './component/init.components'
+import {
+    initRouting
+} from './routing/init-routing'
+import {
+    initDirectives
+} from './directives/init-directives'
+import {
+    EventEmmiter
+} from '../tools/event-emitter'
+import {
+    initPipes
+} from './pipes/init-pipes'
 
 export class Module {
     constructor(config) {
         this.components = config.components
         this.bootstrapComponent = config.bootstrap
         this.routes = config.routes
+        this.directives = config.directives
+        this.pipes = config.pipes
+
+        this.dispatcher = new EventEmmiter()
     }
 
     start() {
-        this.initComponents()
-        if (this.routes) this.initRoutes()
-    }
 
-    initComponents() {
-        this.bootstrapComponent.render()
-        this.components.forEach(this.renderComponent.bind(this))
-    }
+        initPipes(this.pipes)
+        initComponents(this.bootstrapComponent, this.components)
+        initRouting(this.routes, this.dispatcher)
+        initDirectives(this.directives)
 
-    initRoutes() {
-        window.addEventListener('hashchange', this.renderRoute.bind(this))
-        this.renderRoute()
-    }
-
-    renderRoute() {
-        let url = router.getUrl()
-        let route = this.routes.find(r => r.path === url)
-
-        if (_.isUnderfined(route)) {
-            route = this.routes.find(r => r.path === '**')
-        }
-
-        document.querySelector('router-outlet').innerHTML = `<${route.component.selector}></${route.component.selector}>`
-        this.renderComponent(route.component)
-    }
-
-    renderComponent(c) {
-        if (!_.isUnderfined(c.onInit)) c.onInit()
-        c.render()
-        if (!_.isUnderfined(c.afterInit)) c.afterInit()
+        this.dispatcher.on('routing.change-page', () => {
+            initDirectives(this.directives)
+        })
     }
 }
